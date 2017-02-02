@@ -478,9 +478,10 @@ The following checks are performed (on each sniffed packet):
   |                        header extension                       |
   |                             ....                              |
 ```
-  The length field indicates the extension size, header of the extension excluded. His presence is indicated by the X field value. If active, the RTP payload size is adjusted, checking it to be greater than 0.
+The length field indicates the extension size, header of the extension excluded. His presence is indicated by the X field value. If active, the RTP payload size is adjusted, checking it to be greater than 0.
 
 The UDP packets passing those checks are considered like "maybe RTP" packets. Note that the IP and UDP packet checksums aren't checked because quite often they're erroneously computed by VoIP clients. The UDP packets passing those checks are compared with the already detected RTP sessions (this is called pattern over multiple packets). The comparison is done considering the following informations:
+
 1. *SSRC*: The value of the SSRC field in the fixed RTP header indicates the unique identifier of the Sender of the session. His value is constant in all RTP packets of the same session.
 2. *IP addresses and UDP ports* : The IP addresses and the UDP ports of the Sender and Receiver are constant in all RTP packets of the same session.
 3. *Sequence number*: The seq field in the fixed RTP header indicates the packet sequence number, a value that isn't necessarily initialized to 1 but that it's strictly increasing in RTP packets of the same session. It's considered a window of acceptable values for each session, that changes dynamically. This allows to consider the eventuality that some RTP packets may have been lost.
@@ -509,6 +510,6 @@ This project is released under license GPL version 2.
 
 [Antifork](http://www.antifork.org)
 
-~~[xenion headquarter]~~(http://xenion.antifork.org)
+~~[xenion headquarter](http://xenion.antifork.org)~~
 
-~~[rtpbreak home]~~(http://xenion.antifork.org/rtpbreak)
+~~[rtpbreak home](http://xenion.antifork.org/rtpbreak)~~
