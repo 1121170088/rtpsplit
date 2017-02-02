@@ -1470,7 +1470,8 @@ void rtp_stream_search_rev(struct rtp_stream_entry *rtp_stream)
         rtp_stream2->rev = rtp_stream;
 
         SAFE_FPRINTF(rtp_stream->f,"Probable reverse RTP stream id: rtp.%d.%d\n",ndxlog,rtp_stream->rev->fid);
-
+        
+        break;
       }
   }
 
