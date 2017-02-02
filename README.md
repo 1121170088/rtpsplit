@@ -29,7 +29,8 @@ Disable the raw dump of RTP sessions
 -W
 Disable the pcap dump of RTP sessions
 -g
-Fill the gaps of lost packets in raw dumps with the last sniffed packet, preventing desynchronization problems when decoding/mixing multiple RTP streams (with sox, ...)
+Fill the gaps of lost packets in raw dumps with the last sniffed packet, preventing desynchronization problems when 
+decoding/mixing multiple RTP streams (with sox, ...)
 -n
 Dump packets passing the single packet pattern but not the multiple packets pattern (the noise packets) to pcap file
 -f
@@ -44,11 +45,13 @@ Sniff packets in promiscuous mode
 -p <str>
 Consider only packets matching the libpcap filter <str>
 -e
-Expect an even destination UDP port. The RTP packets must have an even destination UDP port. This should be always true, anyway some VoIP networks (like Yahoo) don't respect this rule
+Expect an even destination UDP port. The RTP packets must have an even destination UDP port. This should be always true, 
+anyway some VoIP networks (like Yahoo) don't respect this rule
 -u
 Expect unprivileged source/destination UDP ports (> 1024). This should always be true
 -y <int>
-The RTP packets must have exactly this payload type. For example, if we want only RTP streams with data encoded in G.711 ulaw, we should add the option -y 0, value obtained from the -k option
+The RTP packets must have exactly this payload type. For example, if we want only RTP streams with data encoded in G.711 
+ulaw, we should add the option -y 0, value obtained from the -k option
 -l <int>
 The RTP payload length must be exactly <int> bytes
 -t <float>
@@ -64,7 +67,10 @@ Run as user <str>
 Run in background (option -f implicit)
 MISC
 -k
-Dump a list of known RTP payload types. Note that, because of the useless functionality called "Dynamic RTP Payload", those values shouldn't be considered too much. The rtp_payload_type and codec association is in fact concorded through the Signaling messages (SIP, H.323, SCCP, ...), assigning new values also for those codecs already having a standard and predefined value
+Dump a list of known RTP payload types. Note that, because of the useless functionality called "Dynamic RTP Payload", 
+those values shouldn't be considered too much. The rtp_payload_type and codec association is in fact concorded through the 
+Signaling messages (SIP, H.323, SCCP, ...), assigning new values also for those codecs already having a standard and 
+predefined value
 -h
 Display a summary of the valid options and exit
 ```
@@ -457,28 +463,29 @@ The RTP sessions are composed by an ordered sequence of RTP packets. Those packe
 ```
 The following checks are performed (on each sniffed packet):
 
-* *Destination UDP port*: The destination UDP port must be even, as specified in [rfc1889]. Beyond this, it must be greater than 1024. This because in the UDP and TCP transport protocols the ports <= 1024 are considered privileged and they can't be used by user applications, like VoIP clients.
-* *Minimal packet size*: The UDP payload size must be greater than 12 bytes, this is the size of the fixed header always present in any RTP packet.
-* *RTP version*: The RTP protocol version always used is 2, so the value of the V field in the fixed RTP header must be equal to 2.
-* *Padding bit*: RTP allows to append some bytes as packet trailer, that must be ignored. The number of those bytes is specified exactly in the last packet byte. The P field in the fixed RTP header indicates if this functionality is active. If active, the RTP payload size is adjusted, checking it to be greater than 0.
-* *CSRC list*: RTP allows the RTP Mixer to insert a list of contributing sources. This list, if present, follows immediately the fixed RTP header and it's composed by addresses (of 32 bits), their number is indicated by the CC field in the fixed RTP header. If present, the RTP payload size is adjusted, checking it to be greater than 0.
-* *Extension bit*: RTP allows to extend the fixed RTP header. If present, this extension follows the fixed RTP header and the optional CSRC list. His format follows:
+1. *Destination UDP port*: The destination UDP port must be even, as specified in [rfc1889]. Beyond this, it must be greater than 1024. This because in the UDP and TCP transport protocols the ports <= 1024 are considered privileged and they can't be used by user applications, like VoIP clients.
+2. *Minimal packet size*: The UDP payload size must be greater than 12 bytes, this is the size of the fixed header always present in any RTP packet.
+3. *RTP version*: The RTP protocol version always used is 2, so the value of the V field in the fixed RTP header must be equal to 2.
+4. *Padding bit*: RTP allows to append some bytes as packet trailer, that must be ignored. The number of those bytes is specified exactly in the last packet byte. The P field in the fixed RTP header indicates if this functionality is active. If active, the RTP payload size is adjusted, checking it to be greater than 0.
+5. *CSRC list*: RTP allows the RTP Mixer to insert a list of contributing sources. This list, if present, follows immediately the fixed RTP header and it's composed by addresses (of 32 bits), their number is indicated by the CC field in the fixed RTP header. If present, the RTP payload size is adjusted, checking it to be greater than 0.
+6. *Extension bit*: RTP allows to extend the fixed RTP header. If present, this extension follows the fixed RTP header and the optional CSRC list. His format follows:
 ```
- 0                   1                   2                   3
- 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-|      defined by profile       |           length              |
-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-|                        header extension                       |
-|                             ....                              |
+   0                   1                   2                   3
+   0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
+  +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+  |      defined by profile       |           length              |
+  +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+  |                        header extension                       |
+  |                             ....                              |
 ```
-The length field indicates the extension size, header of the extension excluded. His presence is indicated by the X field value. If active, the RTP payload size is adjusted, checking it to be greater than 0.
+  The length field indicates the extension size, header of the extension excluded. His presence is indicated by the X field value. If active, the RTP payload size is adjusted, checking it to be greater than 0.
 
 The UDP packets passing those checks are considered like "maybe RTP" packets. Note that the IP and UDP packet checksums aren't checked because quite often they're erroneously computed by VoIP clients. The UDP packets passing those checks are compared with the already detected RTP sessions (this is called pattern over multiple packets). The comparison is done considering the following informations:
-* *SSRC*: The value of the SSRC field in the fixed RTP header indicates the unique identifier of the Sender of the session. His value is constant in all RTP packets of the same session.
-* *IP addresses and UDP ports* : The IP addresses and the UDP ports of the Sender and Receiver are constant in all RTP packets of the same session.
-* *Sequence number*: The seq field in the fixed RTP header indicates the packet sequence number, a value that isn't necessarily initialized to 1 but that it's strictly increasing in RTP packets of the same session. It's considered a window of acceptable values for each session, that changes dynamically. This allows to consider the eventuality that some RTP packets may have been lost.
-* *Timestamp*: The ts field in the fixed RTP header indicates the sampling timestamp of the first byte of the RTP payload, a value strictly increasing in RTP packets of the same session. Also in this case it's considered a window of acceptable values for each session, that changes dynamically. This allows to consider the eventuality that some RTP packets may have been lost.
+1. *SSRC*: The value of the SSRC field in the fixed RTP header indicates the unique identifier of the Sender of the session. His value is constant in all RTP packets of the same session.
+2. *IP addresses and UDP ports* : The IP addresses and the UDP ports of the Sender and Receiver are constant in all RTP packets of the same session.
+3. *Sequence number*: The seq field in the fixed RTP header indicates the packet sequence number, a value that isn't necessarily initialized to 1 but that it's strictly increasing in RTP packets of the same session. It's considered a window of acceptable values for each session, that changes dynamically. This allows to consider the eventuality that some RTP packets may have been lost.
+4. *Timestamp*: The ts field in the fixed RTP header indicates the sampling timestamp of the first byte of the RTP payload, a value strictly increasing in RTP packets of the same session. Also in this case it's considered a window of acceptable values for each session, that changes dynamically. This allows to consider the eventuality that some RTP packets may have been lost.
+
 If it's identified a possible session, the UDP packet is inserted in his buffer. If this doesn't happen, a new one is created. When to a session are assigned a minimal set of UDP packets, it's considered valid and any UDP packet in his buffer is considered definitely RTP. This must happen before a timeout, after that the session is considered a false positive (noise packets) and destroyed.
 
 ## Dependencies and compilation
@@ -501,5 +508,7 @@ This project is released under license GPL version 2.
 ## Links
 
 [Antifork](http://www.antifork.org)
-[xenion headquarter](http://xenion.antifork.org)
-[rtpbreak home](http://xenion.antifork.org/rtpbreak)
+
+~~[xenion headquarter]~~(http://xenion.antifork.org)
+
+~~[rtpbreak home]~~(http://xenion.antifork.org/rtpbreak)
