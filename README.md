@@ -1,14 +1,15 @@
 # Introduction
 
-With rtpbreak you can detect, reconstruct and analyze any RTP session. It doesn't require the presence of RTCP packets and works independently form the used signaling protocol (SIP, H.323, SCCP, ...). The input is a sequence of packets, the output is a set of files you can use as input for other tools (wireshark/tshark, sox, grep/awk/cut/cat/sed, ...). It supports also wireless (AP_DLT_IEEE802_11) networks. This is a list of scenarios where rtpbreak is a good choice:
-reconstruct any RTP stream with an unknown or unsupported signaling protocol
-reconstruct any RTP stream in wireless networks, while doing channel hopping (VoIP activity detector)
-reconstruct and decode any RTP stream in batch mode (with sox, asterisk, ...)
-reconstruct any already existing RTP stream
-reorder the packets of any RTP stream for later analysis (with tshark, wireshark, ...)
-build a tiny wireless VoIP tapping system in a single chip Linux unit
-build a complete VoIP tapping system (rtpbreak would be just the RTP dissector module!)
-This project is released under license GPL version 2.
+With rtpbreak you can detect, reconstruct and analyze any RTP session. It doesn't require the presence of RTCP packets and works independently form the used signaling protocol (SIP, H.323, SCCP, ...). The input is a sequence of packets, the output is a set of files you can use as input for other tools (wireshark/tshark, sox, grep/awk/cut/cat/sed, ...). It supports also wireless (AP_DLT_IEEE802_11) networks. 
+This is a list of scenarios where rtpbreak is a good choice:
+* reconstruct any RTP stream with an unknown or unsupported signaling protocol
+* reconstruct any RTP stream in wireless networks, while doing channel hopping (VoIP activity detector)
+* reconstruct and decode any RTP stream in batch mode (with sox, asterisk, ...)
+* reconstruct any already existing RTP stream
+* reorder the packets of any RTP stream for later analysis (with tshark, wireshark, ...)
+* build a tiny wireless VoIP tapping system in a single chip Linux unit
+* build a complete VoIP tapping system (rtpbreak would be just the RTP dissector module!)
+
 ## Usage
 
 The unique mandatory input parameter is the packet source (network interface or pcap file). This is the list of accepted parameters:
@@ -66,8 +67,10 @@ MISC
 Dump a list of known RTP payload types. Note that, because of the useless functionality called "Dynamic RTP Payload", those values shouldn't be considered too much. The rtp_payload_type and codec association is in fact concorded through the Signaling messages (SIP, H.323, SCCP, ...), assigning new values also for those codecs already having a standard and predefined value
 -h
 Display a summary of the valid options and exit
+```
 The files in the output directory have the following naming scheme: The set of files with pattern rtp.x.* refer to the rtpbreak execution number x, the subset of files with pattern rtp.x.y.* refer to the RTP session number y (of the rtpbreak execution number x). At each execution and at each RTP session detection, x and y are respectively incremented. The set of output files of the rtpbreak execution number x is organized as follows:
 
+```
 rtp.x.txt
 The rtpbreak execution log, always generated
 rtp.x.noise.pcap
@@ -85,9 +88,11 @@ The y RTP session log, always generated
 ## Examples
 
 In this section there are some commented examples.
+
 ### Record, mix and replay a VoIP call
 
-Scope: We want to detect, reconstruct and decode a conversation between two VoIP Wireless phones, the final output should be a wav file. First of all, we sniff the packets with rtpbreak (fill gaps, sniff packets in promisc mode, gather packets from network interface wifi0, use './logz/' as output directory):
+**Scope**: We want to detect, reconstruct and decode a conversation between two VoIP Wireless phones, the final output should be a wav file. First of all, we sniff the packets with rtpbreak (fill gaps, sniff packets in promisc mode, gather packets from network interface wifi0, use './logz/' as output directory):
+```
 xenion@gollum:~/dev/rtpbreak-1.3$ sudo src/rtpbreak -i wifi0 -g -m -d logz
  + rtpbreak v1.3 running here!
  + pid: 3580, date/time: 19/02/2008#09:49:21
@@ -147,8 +152,9 @@ Caught SIGINT signal (2), cleaning up...
  + No active RTP streams
 
 xenion@gollum:~/dev/rtpbreak-1.3$
+```
 We've sent a SIGUSR2 signal to the rtpbreak process at call_length=1m2s, forcing a stats print. The final output directory content is the following:
-
+```
 xenion@gollum:~/dev/rtpbreak-1.3$ ls -1 logz
 rtp.0.0.pcap
 rtp.0.0.raw
@@ -158,8 +164,9 @@ rtp.0.1.raw
 rtp.0.1.txt
 rtp.0.txt
 xenion@gollum:~/dev/rtpbreak-1.3$
+```
 Those are the two RTP sessions logs:
-
+```
 xenion@gollum:~/dev/rtpbreak-1.3$ cat logz/rtp.0.0.txt 
 RTP stream id: rtp.0.0
 Packet source: iface  'wifi0'
@@ -186,16 +193,18 @@ Flushed packets: 2800
 Lost packets: 115 (3.95%)
 RTP payload length: 240 bytes (fixed)
 xenion@gollum:~/dev/rtpbreak-1.3$
+```
 Now, we've to decode, mix and replay this recorded call:
-
+```
 xenion@gollum:~/dev/rtpbreak-1.3$ sox -r8000 -c1 -t ul logz/rtp.0.0.raw -t wav logz/0.wav
 xenion@gollum:~/dev/rtpbreak-1.3$ sox -r8000 -c1 -t ul logz/rtp.0.1.raw -t wav logz/1.wav
 xenion@gollum:~/dev/rtpbreak-1.3$ sox -m logz/0.wav logz/1.wav logz/call.wav
 xenion@gollum:~/dev/rtpbreak-1.3$ mplayer logz/call.wav
-
+```
 ### Analyze an RTP session
 
-Scope: We want to analyze a pcap file with some RTP streams, using the most aggressive configuration of the detection heuristics. First of all, we reconstruct the RTP streams with rtpbreak:
+**Scope**: We want to analyze a pcap file with some RTP streams, using the most aggressive configuration of the detection heuristics. First of all, we reconstruct the RTP streams with rtpbreak:
+```
 xenion@gollum:~/dev/rtpbreak-1.3$ rtpbreak -P2 -t100 -T100 -d logz -r h323.pcap  
  + rtpbreak v1.3 running here!
  + pid: 4613, date/time: 19/02/2008#10:18:54
@@ -249,7 +258,9 @@ Caught SIGTERM signal (15), cleaning up...
  + No active RTP streams
 
 xenion@gollum:~/dev/rtpbreak-1.3$
+```
 The output directory content, after running examples 1 and 2, should be the following:
+```
 xenion@gollum:~/dev/rtpbreak-1.3$ ls -1 logz
 0.wav
 1.wav
@@ -272,7 +283,9 @@ rtp.1.2.raw
 rtp.1.2.txt
 rtp.1.txt
 xenion@gollum:~/dev/rtpbreak-1.3$
+```
 The set of files of the second rtpbreak execution have prefix rtp.1. Those are the three RTP sessions logs:
+```
 xenion@gollum:~/dev/rtpbreak-1.3$ cat logz/rtp.1.0.txt
 RTP stream id: rtp.1.0
 Packet source: rxfile 'h323.pcap'
@@ -311,8 +324,9 @@ Flushed packets: 2286
 Lost packets: 0 (0.00%)
 RTP payload length: 945 bytes (variable, this is the last seen)
 xenion@gollum:~/dev/rtpbreak-1.3$
+```
 Now, we completely dissect the first packet of the third RTP session with tshark:
-
+```
 xenion@gollum:~/dev/rtpbreak-1.3$ cat logz/rtp.1.2.txt | grep "Stream peers"
 Stream peers: 172.16.1.109:5006 => 172.16.1.105:5014
 xenion@gollum:~/dev/rtpbreak-1.3$ tshark -r logz/rtp.1.2.pcap -d udp.port==5006,rtp -c 1 -V
@@ -387,6 +401,7 @@ ITU-T Recommendation H.261
     H.261 stream: 00010006000113220300C0300DFF7FD1019B8103881035C0...
 
 xenion@gollum:~/dev/rtpbreak-1.3$
+```
 The wrong UDP checksum comes from the original network packet, rtpbreak only reorders the network packets of each RTP stream. As we did, rtpbreak can be used together with tshark/wireshark to handle complex needs.
 
 ## Particular scenarios
@@ -399,27 +414,34 @@ An improbable high number of RTP sessions and noise packets is detected.
 There is some type of silence suppression.
 ### Solution
 Dilate the timeouts:
+```
 rtpbreak -i eth0 -n -t100 -T100
+```
 ### Problem
 An expected RTP session is not recognized and some noise packets are detected.
 ### Cause
 The conversation has been immediately terminated.
 ### Solution
 Reduce the number of required packets for the multiple packets pattern:
+```
 rtpbreak -i eth0 -n -P2
+```
 ### Problem
 The expected RTP sessions are not recognized.
 ### Cause
 The protocol is not RTP, the network interface is not in promisc mode, the conversation is very disturbed, the conversation was immediately terminated.
 ### Solution
 Dilate the timeouts and reduce the number of required packets for the multiple packets pattern:
+```
 rtpbreak -i eth0 -m -n -P2 -t100 -T100
+```
 This is the most aggressive (and computationally expensive) configuration of the detection heuristics and will always detect any RTP session.
 
 ## How it works
 
 The RTP sessions are composed by an ordered sequence of RTP packets. Those packets transport the Real Time data using the UDP transport protocol. The RTP packets must respect some well defined rules in order to be considered valid, this characteristic allows us to define a pattern on the single packet that is used to discriminate the captured network traffic from packets that can be RTP and those that securely are not. The fixed RTP header has this format:
 
+ ```
  0                   1                   2                   3
  0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
 +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
@@ -432,14 +454,16 @@ The RTP sessions are composed by an ordered sequence of RTP packets. Those packe
 |            contributing source (CSRC) identifiers             |
 |                             ....                              |
 +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+```
 The following checks are performed (on each sniffed packet):
 
-Destination UDP port: The destination UDP port must be even, as specified in [rfc1889]. Beyond this, it must be greater than 1024. This because in the UDP and TCP transport protocols the ports <= 1024 are considered privileged and they can't be used by user applications, like VoIP clients.
-Minimal packet size: The UDP payload size must be greater than 12 bytes, this is the size of the fixed header always present in any RTP packet.
-RTP version: The RTP protocol version always used is 2, so the value of the V field in the fixed RTP header must be equal to 2.
-Padding bit: RTP allows to append some bytes as packet trailer, that must be ignored. The number of those bytes is specified exactly in the last packet byte. The P field in the fixed RTP header indicates if this functionality is active. If active, the RTP payload size is adjusted, checking it to be greater than 0.
-CSRC list: RTP allows the RTP Mixer to insert a list of contributing sources. This list, if present, follows immediately the fixed RTP header and it's composed by addresses (of 32 bits), their number is indicated by the CC field in the fixed RTP header. If present, the RTP payload size is adjusted, checking it to be greater than 0.
-Extension bit: RTP allows to extend the fixed RTP header. If present, this extension follows the fixed RTP header and the optional CSRC list. His format follows:
+* *Destination UDP port*: The destination UDP port must be even, as specified in [rfc1889]. Beyond this, it must be greater than 1024. This because in the UDP and TCP transport protocols the ports <= 1024 are considered privileged and they can't be used by user applications, like VoIP clients.
+* *Minimal packet size*: The UDP payload size must be greater than 12 bytes, this is the size of the fixed header always present in any RTP packet.
+* *RTP version*: The RTP protocol version always used is 2, so the value of the V field in the fixed RTP header must be equal to 2.
+* *Padding bit*: RTP allows to append some bytes as packet trailer, that must be ignored. The number of those bytes is specified exactly in the last packet byte. The P field in the fixed RTP header indicates if this functionality is active. If active, the RTP payload size is adjusted, checking it to be greater than 0.
+* *CSRC list*: RTP allows the RTP Mixer to insert a list of contributing sources. This list, if present, follows immediately the fixed RTP header and it's composed by addresses (of 32 bits), their number is indicated by the CC field in the fixed RTP header. If present, the RTP payload size is adjusted, checking it to be greater than 0.
+* *Extension bit*: RTP allows to extend the fixed RTP header. If present, this extension follows the fixed RTP header and the optional CSRC list. His format follows:
+```
  0                   1                   2                   3
  0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
 +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
@@ -447,26 +471,35 @@ Extension bit: RTP allows to extend the fixed RTP header. If present, this exten
 +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 |                        header extension                       |
 |                             ....                              |
+```
 The length field indicates the extension size, header of the extension excluded. His presence is indicated by the X field value. If active, the RTP payload size is adjusted, checking it to be greater than 0.
 
 The UDP packets passing those checks are considered like "maybe RTP" packets. Note that the IP and UDP packet checksums aren't checked because quite often they're erroneously computed by VoIP clients. The UDP packets passing those checks are compared with the already detected RTP sessions (this is called pattern over multiple packets). The comparison is done considering the following informations:
-
-SSRC: The value of the SSRC field in the fixed RTP header indicates the unique identifier of the Sender of the session. His value is constant in all RTP packets of the same session.
-IP addresses and UDP ports: The IP addresses and the UDP ports of the Sender and Receiver are constant in all RTP packets of the same session.
-Sequence number: The seq field in the fixed RTP header indicates the packet sequence number, a value that isn't necessarily initialized to 1 but that it's strictly increasing in RTP packets of the same session. It's considered a window of acceptable values for each session, that changes dynamically. This allows to consider the eventuality that some RTP packets may have been lost.
-Timestamp: The ts field in the fixed RTP header indicates the sampling timestamp of the first byte of the RTP payload, a value strictly increasing in RTP packets of the same session. Also in this case it's considered a window of acceptable values for each session, that changes dynamically. This allows to consider the eventuality that some RTP packets may have been lost.
+* *SSRC*: The value of the SSRC field in the fixed RTP header indicates the unique identifier of the Sender of the session. His value is constant in all RTP packets of the same session.
+* *IP addresses and UDP ports* : The IP addresses and the UDP ports of the Sender and Receiver are constant in all RTP packets of the same session.
+* *Sequence number*: The seq field in the fixed RTP header indicates the packet sequence number, a value that isn't necessarily initialized to 1 but that it's strictly increasing in RTP packets of the same session. It's considered a window of acceptable values for each session, that changes dynamically. This allows to consider the eventuality that some RTP packets may have been lost.
+* *Timestamp*: The ts field in the fixed RTP header indicates the sampling timestamp of the first byte of the RTP payload, a value strictly increasing in RTP packets of the same session. Also in this case it's considered a window of acceptable values for each session, that changes dynamically. This allows to consider the eventuality that some RTP packets may have been lost.
 If it's identified a possible session, the UDP packet is inserted in his buffer. If this doesn't happen, a new one is created. When to a session are assigned a minimal set of UDP packets, it's considered valid and any UDP packet in his buffer is considered definitely RTP. This must happen before a timeout, after that the session is considered a false positive (noise packets) and destroyed.
 
 ## Dependencies and compilation
 
 This is a Unix-oriented application written in C. The compilation requires a C compiler like gcc and the following libs: libpcap (≥0.7), libnet (≥1.1). In debian, you need the following packages (or higher versions):
-libnet1
-libnet1-dev
-libpcap0.7
-libpcap0.7-dev
+* libnet1
+* libnet1-dev
+* libpcap0.7
+* libpcap0.7-dev
+
 To compile, type "make" in the top directory.
 
 In order to decode the RTP streams with sox, you need sox with the support for the required formats. In debian, you need the following packages:
+* sox
+* libsox-fmt-all
 
-sox
-libsox-fmt-all
+## Licence
+This project is released under license GPL version 2.
+
+## Links
+
+[Antifork](http://www.antifork.org)
+[xenion headquarter](http://xenion.antifork.org)
+[rtpbreak home](http://xenion.antifork.org/rtpbreak)
